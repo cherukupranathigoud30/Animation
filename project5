@@ -1,0 +1,61 @@
+package com.example.medical.controller;
+
+import com.example.medical.model.Patient;
+import com.example.medical.repository.PatientRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Optional;
+
+@RestController
+@RequestMapping("/api/patients")
+public class PatientController {
+
+    @Autowired
+    private PatientRepository patientRepository;
+
+    @GetMapping
+    public List<Patient> getAllPatients() {
+        return patientRepository.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Patient> getPatientById(@PathVariable Long id) {
+        Optional<Patient> patient = patientRepository.findById(id);
+        return patient.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PostMapping
+    public Patient createPatient(@RequestBody Patient patient) {
+        return patientRepository.save(patient);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Patient> updatePatient(@PathVariable Long id, @RequestBody Patient updatedPatient) {
+        Optional<Patient> existingPatient = patientRepository.findById(id);
+        if (existingPatient.isPresent()) {
+            Patient patient = existingPatient.get();
+            patient.setFirstName(updatedPatient.getFirstName());
+            patient.setLastName(updatedPatient.getLastName());
+            patient.setDob(updatedPatient.getDob());
+            // Update other fields
+            return ResponseEntity.ok(patientRepository.save(patient));
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletePatient(@PathVariable Long id) {
+        if (patientRepository.existsById(id)) {
+            patientRepository.deleteById(id);
+            return ResponseEntity.noContent().build();
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+}
+
+
